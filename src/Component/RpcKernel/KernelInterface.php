@@ -1,0 +1,28 @@
+<?php
+
+namespace Phalsion\RpcFramework\Component\RpcKernel;
+
+
+/**
+ * Interface KernelInterface
+ *
+ * @author  liqi created_at 2017/10/18下午4:54
+ * @package Phalsion\RpcFramework\Component\RpcKernel
+ */
+interface KernelInterface
+{
+    /**
+     * @return \Phalsion\RpcFramework\Component\RpcKernel\Bundle\BundleInterface[]
+     */
+    public function registerBundles();
+
+    public function getBundles();
+
+    public function getEnvironment();
+
+    public function isDebug();
+
+    public function getRootDir();
+
+    public function getLogDir();
+}
