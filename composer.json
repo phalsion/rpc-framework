@@ -1,0 +1,10 @@
+{
+    "name": "phalsion/rpc-framwork",
+    "authors": [
+        {
+            "name": "saberuster",
+            "email": "saberuster@gmail.com"
+        }
+    ],
+    "require": {}
+}
