@@ -14,3 +14,10 @@ if ( !function_exists('env') ) {
         return Config::env($path);
     }
 }
+
+if ( !function_exists('conf') ) {
+    function conf( $path )
+    {
+        return Config::conf($path);
+    }
+}

@@ -1,0 +1,8 @@
+#RpcServer配置
+imports:
+  - {resource: 'server.yml'}
+  - {resource: 'client.yml'}
+
+framework:
+
+

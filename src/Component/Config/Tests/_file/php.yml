@@ -1,0 +1,6 @@
+imports:
+    - { resource: php2.yml }
+
+test:
+    testphp: !php "\r\n"
+

@@ -1,0 +1,10 @@
+default:
+    address: !env swoole.client.default.address
+    port: !env swoole.client.default.port
+    timeout: !env swoole.client.default.timeout
+    construct: SWOOLE_SOCK_TCP
+    setting:
+        open_eof_check: true
+        package_eof: !php "\r\n"
+        package_max_length: !php 1024*1024
+        socket_buffer_size: !php 1024*1024*2

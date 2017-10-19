@@ -1,0 +1,20 @@
+<phpunit bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <!--<php>-->
+    <!--</php>-->
+    <!--<testsuites>-->
+        <testsuite name="config">
+            <directory>src/Component/Config/Tests</directory>
+        </testsuite>
+        <!--<testsuite name="demo">-->
+        <!--</testsuite>-->
+        <!--<testsuite name="swoole">-->
+            <!--<directory>tests/swoole</directory>-->
+        <!--</testsuite>-->
+        <!--<testsuite name="mock">-->
+            <!--<file>tests/Bundles/Demo/Repository/UserRepositoryTest.php</file>-->
+        <!--</testsuite>-->
+    <!--</testsuites>-->
+</phpunit>
+

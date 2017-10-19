@@ -3,11 +3,16 @@
 namespace Phalsion\RpcFramework\Component\RpcKernel;
 
 
+use Phalcon\Config\Adapter\Ini;
 use Phalcon\Di\Injectable;
 use Phalcon\Di\ServiceProviderInterface;
+use Phalsion\RpcFramework\Bundle\DebugBundle\DebugBundle;
+use Phalsion\RpcFramework\Bundle\FrameworkBundle\ErrorCode;
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\FrameWorkBundle;
-use Phalsion\RpcFramework\Component\RpcKernel\Fundation\RequestInterface;
-use SebastianBergmann\GlobalState\RuntimeException;
+use Phalsion\RpcFramework\Component\Config\ConfigLoaderInterface;
+use Phalsion\RpcFramework\Component\RpcKernel\Foundation\RequestBuilder;
+use Phalsion\RpcFramework\Component\RpcKernel\Foundation\RequestInterface;
+use Phalsion\RpcFramework\Component\RpcKernel\Foundation\Response;
 
 /**
  * Class Kernel
@@ -48,16 +53,23 @@ abstract class Kernel extends Injectable implements KernelInterface
         $this->is_debug    = (bool) $debug;
         $this->booted      = false;
 
-        $this->systemBundles = [
-            new FrameWorkBundle()
-        ];
+        $this->systemBundles[] = new FrameWorkBundle();
+
+        if ( $this->is_debug ) {
+            $this->systemBundles[] = new DebugBundle();
+        }
 
     }
 
 
+    public function reload()
+    {
+
+    }
+
     public function boot()
     {
-        //如果改方法已经被调用过，则直接返回
+        //如果该方法已经被调用过，则直接返回
         if ( $this->booted ) {
             return;
         }
@@ -68,6 +80,21 @@ abstract class Kernel extends Injectable implements KernelInterface
 
     }
 
+    public function loadConfig( ConfigLoaderInterface $config_loader )
+    {
+        //先加载env.ini
+        $this->getDI()->setShared('env', new Ini($this->getRootDir() . '/env.ini'));
+
+        //加载框架配置项
+        $path = "config_" . $this->getEnvironment() . '.yml';
+        if ( !file_exists($this->getRootDir() . '/config/' . $path) ) {
+            $path = "config_" . $this->getEnvironment() . '.php';
+        }
+        $config_loader->setRootPath($this->getRootDir() . '/config/');
+        $config_loader->load($path);
+    }
+
+
     /**
      * 处理请求
      *
@@ -77,13 +104,16 @@ abstract class Kernel extends Injectable implements KernelInterface
      *
      * @return mixed
      */
-    public function handle( $task, $action, RequestInterface $request )
+    public function handle( $data )
     {
+        //创建请求对象
+        $request = RequestBuilder::createFromData($data);
         $this->getDI()->set('request', $request);
         try {
-            $response = $this->getDI()->get('console')->handle(compact('task', 'action'))->getResponse();
+            //处理请求获取返回信息
+            $response = $this->getDI()->get('console')->handle($request->match())->getResponse();
         } catch ( \Exception $exception ) {
-            $response = null;
+            $response = Response::createResponse(ErrorCode::FAIL, $exception->getMessage(), null, 0);
         }
         $this->getDI()->remove('request');
 

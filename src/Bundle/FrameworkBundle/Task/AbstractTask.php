@@ -3,6 +3,9 @@
 namespace Phalsion\RpcFramework\Component\BaseClass;
 
 
+use Phalsion\RpcFramework\Component\RpcKernel\Foundation\Response;
+
+
 /**
  * Class AbstractTask
  *
@@ -15,7 +18,12 @@ abstract class AbstractTask extends AbstractBaseClass implements TaskInterface
 
     public function getResponse()
     {
-        return $this->_response;
+        return Response::createResponse(
+            $this->_response['code'],
+            $this->_response['data'],
+            $this->_response['msg'],
+            $this->_response['flag']
+        );
     }
 
 
