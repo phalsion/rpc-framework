@@ -10,6 +10,7 @@ use Phalsion\RpcFramework\Bundle\DebugBundle\DebugBundle;
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\ErrorCode;
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\FrameWorkBundle;
 use Phalsion\RpcFramework\Component\Config\ConfigLoaderInterface;
+use Phalsion\RpcFramework\Component\Router\RouterInterface;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\RequestBuilder;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\RequestInterface;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\Response;
@@ -30,7 +31,7 @@ abstract class Kernel extends Injectable implements KernelInterface
     protected $environment;
     protected $startTime;
     protected $booted;
-    protected $systemBundles;
+    protected $router;
 
 
     /**
@@ -47,18 +48,14 @@ abstract class Kernel extends Injectable implements KernelInterface
      * @param string  $environment
      * @param boolean $debug
      */
-    public function __construct( $environment, $debug )
+    public function __construct( $environment, $debug, ConfigLoaderInterface $config_loader, RouterInterface $router )
     {
         $this->environment = $environment;
         $this->is_debug    = (bool) $debug;
         $this->booted      = false;
-
-        $this->systemBundles[] = new FrameWorkBundle();
-
-        if ( $this->is_debug ) {
-            $this->systemBundles[] = new DebugBundle();
-        }
-
+        $this->loadConfig($config_loader);
+        $this->router->setRouterMap([]);
+        $this->router = $router;
     }
 
 
@@ -106,6 +103,8 @@ abstract class Kernel extends Injectable implements KernelInterface
      */
     public function handle( $data )
     {
+        $match_router   = $this->router->match($data);
+        $data['router'] = $match_router;
         //创建请求对象
         $request = RequestBuilder::createFromData($data);
         $this->getDI()->set('request', $request);
@@ -130,7 +129,7 @@ abstract class Kernel extends Injectable implements KernelInterface
     protected function initializeBundles()
     {
         $this->bundles = array();
-        $bundles       = array_merge($this->registerSystemBundles(), $this->registerBundles());
+        $bundles       = $this->registerBundles();
         foreach ( $bundles as $bundle ) {
             $name = $bundle->getName();
             if ( isset($this->bundles[ $name ]) ) {
@@ -144,11 +143,6 @@ abstract class Kernel extends Injectable implements KernelInterface
 
             throw new \RuntimeException(sprintf('名称为"%s"的bundle 必须实现 Phalcon\Di\ServiceProviderInterface接口才能被注册', $name));
         }
-    }
-
-    public function registerSystemBundles()
-    {
-        return $this->systemBundles;
     }
 
 

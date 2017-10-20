@@ -2,6 +2,7 @@
 
 namespace Phalsion\RpcFramework\Bundle\FrameworkBundle;
 
+
 use Phalsion\RpcFramework\Component\RpcKernel\Bundle\AbstractBundle;
 
 /**

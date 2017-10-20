@@ -5,6 +5,7 @@ namespace Phalsion\RpcFramework\Component\RpcServer;
 
 use Phalsion\RpcFramework\Component\Exception\RuntimeException;
 use Phalsion\RpcFramework\Component\RpcKernel\KernelInterface;
+use Phalsion\RpcFramework\Component\RpcServer\Parser\ParserInterface;
 
 /**
  * Class RpcServer
@@ -17,8 +18,16 @@ class RpcServer
 
     protected $server;
     protected $kernel;
+    protected $parser;
 
-    public function __construct( $name = 'default' )
+    public function __construct( $name = 'default', KernelInterface $kernel, ParserInterface $parser )
+    {
+        $this->server = $this->bootstrap($name);
+        $this->kernel = $kernel;
+        $this->parser = $parser;
+    }
+
+    protected function bootstrap( $name )
     {
         $port_path = sprintf('swoole.ports.%s.', $name);
         if ( !conf($port_path) ) {
@@ -30,9 +39,12 @@ class RpcServer
         $socket_type = conf($port_path . 'socket_type');
         $setting     = conf($port_path . 'setting')->toArray();
 
-        $this->server = new \swoole_server($address, $port, $model, $socket_type);
-        $this->server->set($setting);
+        $server = new \swoole_server($address, $port, $model, $socket_type);
+        $server->set($setting);
+
+        return $server;
     }
+
 
     public function onWorkerStart( $serv, $worker_id )
     {
@@ -44,16 +56,15 @@ class RpcServer
 
     public function onReceive( \swoole_server $server, $fd, $reactor_id, $origin_data )
     {
-        $data     = $origin_data;
+        $data     = $this->parser->decode($origin_data);
         $response = $this->kernel->handle($data);
 
-        $server->send($fd, $response);
+        $server->send($fd, $this->parser->encode($response));
     }
 
 
-    public function serve( KernelInterface $kernel )
+    public function serve()
     {
-        $this->kernel = $kernel;
         $this->server->on('WorkerStart', [ $this, 'onWorkerStart' ]);
         $this->server->on('Receive', [ $this, 'onReceive' ]);
         $this->server->start();

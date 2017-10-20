@@ -2,6 +2,7 @@
 
 namespace Phalsion\RpcFramework\Component\RpcKernel\Bundle;
 
+
 use Phalcon\Di\ServiceProviderInterface;
 
 /**
@@ -13,4 +14,6 @@ use Phalcon\Di\ServiceProviderInterface;
 interface BundleInterface extends ServiceProviderInterface
 {
     public function boot();
+
+    public function getName();
 }
