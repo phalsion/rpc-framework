@@ -103,19 +103,18 @@ abstract class Kernel extends Injectable implements KernelInterface
      */
     public function handle( $data )
     {
-        $match_router   = $this->router->match($data);
-        $data['router'] = $match_router;
-        //创建请求对象
-        $request = RequestBuilder::createFromData($data);
-        $this->getDI()->set('request', $request);
         try {
+            $match_router   = $this->router->match($data);
+            $data['router'] = $match_router;
+            //创建请求对象
+            $request = RequestBuilder::createFromData($data);
+            $this->getDI()->set('request', $request);
             //处理请求获取返回信息
             $response = $this->getDI()->get('console')->handle($request->match())->getResponse();
+            $this->getDI()->remove('request');
         } catch ( \Exception $exception ) {
             $response = Response::createResponse(ErrorCode::FAIL, $exception->getMessage(), null, 0);
         }
-        $this->getDI()->remove('request');
-
         return $response;
     }
 

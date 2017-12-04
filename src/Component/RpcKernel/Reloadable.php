@@ -8,7 +8,7 @@ namespace Phalsion\RpcFramework\Component\RpcKernel;
  * @author  liqi created_at 2017/10/19下午6:03
  * @package Phalsion\RpcFramework\Component\RpcKernel
  */
-interface ReloadKernelInterface
+interface Reloadable
 {
     public function reload();
 }

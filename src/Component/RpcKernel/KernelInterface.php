@@ -12,7 +12,7 @@ use Phalcon\Di\InjectionAwareInterface;
  * @author  liqi created_at 2017/10/18下午4:54
  * @package Phalsion\RpcFramework\Component\RpcKernel
  */
-interface KernelInterface extends InjectionAwareInterface, ReloadKernelInterface
+interface KernelInterface extends InjectionAwareInterface, ReloadableHandler
 {
     /**
      * @return \Phalsion\RpcFramework\Component\RpcKernel\Bundle\BundleInterface[]
@@ -29,5 +29,4 @@ interface KernelInterface extends InjectionAwareInterface, ReloadKernelInterface
 
     public function getLogDir();
 
-    public function handle( $data );
 }

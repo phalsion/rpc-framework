@@ -3,10 +3,8 @@
 namespace Phalsion\RpcFramework\Component\FileLoader;
 
 
-use Phalcon\DiInterface;
 use Phalsion\RpcFramework\Component\Config\Config;
 use Phalsion\RpcFramework\Component\Config\YmlResolver;
-use Phalsion\RpcFramework\Component\Exception\RuntimeException;
 use Phalsion\RpcFramework\Component\RpcKernel\KernelInterface;
 
 /**

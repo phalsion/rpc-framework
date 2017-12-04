@@ -3,18 +3,19 @@
 >
     <!--<php>-->
     <!--</php>-->
-    <!--<testsuites>-->
+    <testsuites>
         <testsuite name="config">
             <directory>src/Component/Config/Tests</directory>
         </testsuite>
-        <!--<testsuite name="demo">-->
-        <!--</testsuite>-->
+        <testsuite name="tests">
+            <directory>tests</directory>
+        </testsuite>
         <!--<testsuite name="swoole">-->
-            <!--<directory>tests/swoole</directory>-->
+        <!--<directory>tests/swoole</directory>-->
         <!--</testsuite>-->
         <!--<testsuite name="mock">-->
-            <!--<file>tests/Bundles/Demo/Repository/UserRepositoryTest.php</file>-->
+        <!--<file>tests/Bundles/Demo/Repository/UserRepositoryTest.php</file>-->
         <!--</testsuite>-->
-    <!--</testsuites>-->
+    </testsuites>
 </phpunit>
 

@@ -2,6 +2,7 @@
 
 namespace Phalsion\RpcFramework\Bundle\DebugBundle;
 
+
 use Phalsion\RpcFramework\Component\RpcKernel\Bundle\AbstractBundle;
 
 /**
@@ -15,5 +16,6 @@ class DebugBundle extends AbstractBundle
 
     public function boot()
     {
+        require "./foundation.php";
     }
 }

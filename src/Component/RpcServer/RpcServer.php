@@ -3,8 +3,8 @@
 namespace Phalsion\RpcFramework\Component\RpcServer;
 
 
-use Phalsion\RpcFramework\Component\Exception\RuntimeException;
-use Phalsion\RpcFramework\Component\RpcKernel\KernelInterface;
+use Phalsion\RpcFramework\Component\RpcKernel\Handable;
+use Phalsion\RpcFramework\Component\RpcKernel\Reloadable;
 use Phalsion\RpcFramework\Component\RpcServer\Parser\ParserInterface;
 
 /**
@@ -19,28 +19,20 @@ class RpcServer
     protected $server;
     protected $kernel;
     protected $parser;
+    protected $is_debug;
 
-    public function __construct( $name = 'default', KernelInterface $kernel, ParserInterface $parser )
+    public function __construct( Handable $kernel, ParserInterface $parser, ServerParams $params )
     {
-        $this->server = $this->bootstrap($name);
-        $this->kernel = $kernel;
-        $this->parser = $parser;
+        $this->server   = $this->bootstrap($params);
+        $this->kernel   = $kernel;
+        $this->parser   = $parser;
+        $this->is_debug = $params->is_debug;
     }
 
-    protected function bootstrap( $name )
+    protected function bootstrap( ServerParams $params )
     {
-        $port_path = sprintf('swoole.ports.%s.', $name);
-        if ( !conf($port_path) ) {
-            throw new RuntimeException(sprintf('未找到%s的server配置项!', $name));
-        }
-        $address     = conf($port_path . 'address');
-        $port        = conf($port_path . 'port');
-        $model       = conf($port_path . 'model');
-        $socket_type = conf($port_path . 'socket_type');
-        $setting     = conf($port_path . 'setting')->toArray();
-
-        $server = new \swoole_server($address, $port, $model, $socket_type);
-        $server->set($setting);
+        $server = new \swoole_server($params->address, $params->port, $params->model, $params->socket_type);
+        $server->set($params->setting);
 
         return $server;
     }
@@ -50,7 +42,8 @@ class RpcServer
     {
         if ( $worker_id >= $serv->setting['worker_num'] ) {
         } else {
-            $this->kernel->reload();
+            if ( $this->kernel instanceof Reloadable )
+                $this->kernel->reload();
         }
     }
 
