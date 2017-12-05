@@ -15,6 +15,14 @@ class Response implements ResponseInterface
     public $data;
     public $flag;
 
+    /**
+     * @param $code
+     * @param $msg
+     * @param $data
+     * @param $flag
+     *
+     * @return static
+     */
     public static function createResponse( $code, $msg, $data, $flag )
     {
         $instance       = new static();

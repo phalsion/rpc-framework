@@ -10,9 +10,9 @@
         <testsuite name="tests">
             <directory>tests</directory>
         </testsuite>
-        <!--<testsuite name="swoole">-->
-        <!--<directory>tests/swoole</directory>-->
-        <!--</testsuite>-->
+        <testsuite name="kernel">
+            <directory>src/Component/RpcKernel/Tests</directory>
+        </testsuite>
         <!--<testsuite name="mock">-->
         <!--<file>tests/Bundles/Demo/Repository/UserRepositoryTest.php</file>-->
         <!--</testsuite>-->

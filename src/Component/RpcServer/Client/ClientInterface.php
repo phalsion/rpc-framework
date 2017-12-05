@@ -28,7 +28,7 @@ interface ClientInterface
      *
      * @return mixed
      */
-    public function connect( $conn );
+    public function connect( ClientParams $conn );
 
 
     /**

@@ -2,6 +2,9 @@
 
 namespace Phalsion\RpcFramework\Component\RpcServer\Parser;
 
+
+use Phalsion\RpcFramework\Bundle\FrameworkBundle\Exception\AppException;
+
 /**
  * Class JsonParser
  *
@@ -17,6 +20,11 @@ class JsonParser implements ParserInterface
 
     public function decode( $data )
     {
-        return json_decode($data);
+        $dec = json_decode($data, true);
+        if ( $dec === null ) {
+            throw new AppException('client decode error:' . $data, 9995);
+        }
+
+        return $dec;
     }
 }

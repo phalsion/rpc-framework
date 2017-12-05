@@ -1,8 +1,9 @@
 <?php
 
-namespace Phalsion\RpcFramework\Component\BaseClass;
+namespace Phalsion\RpcFramework\Bundle\FrameworkBundle\Task;
 
 
+use Phalsion\RpcFramework\Bundle\FrameworkBundle\AbstractBaseClass;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\Response;
 
 
@@ -16,18 +17,21 @@ abstract class AbstractTask extends AbstractBaseClass implements TaskInterface
 {
     private $_response;
 
+    /**
+     * @return \Phalsion\RpcFramework\Component\RpcKernel\Foundation\ResponseInterface
+     */
     public function getResponse()
     {
         return Response::createResponse(
             $this->_response['code'],
-            $this->_response['data'],
             $this->_response['msg'],
+            $this->_response['response'],
             $this->_response['flag']
         );
     }
 
 
-    public function response( $response, $code = null, $msg = '', $flag = 0 )
+    public function response( $response, $code = 0, $msg = '', $flag = 0 )
     {
         $this->_response = compact('response', 'code', 'msg', 'flag');
 

@@ -10,10 +10,9 @@ namespace Phalsion\RpcFramework\Component\Config;
  */
 interface ConfigLoaderInterface
 {
-    public function register( $name, $data );
+    public function register( $data );
 
     public function load( $dir_path );
 
-    public function setRootPath( $root_path );
 
 }

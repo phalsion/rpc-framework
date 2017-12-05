@@ -2,6 +2,10 @@
 
 namespace Phalsion\RpcFramework\Component\RpcServer\Client;
 
+
+use Phalsion\RpcFramework\Bundle\FrameworkBundle\Exception\AppException;
+use Phalsion\RpcFramework\Component\RpcServer\Parser\ParserInterface;
+
 /**
  * Class RpcClient
  *
@@ -10,13 +14,6 @@ namespace Phalsion\RpcFramework\Component\RpcServer\Client;
  */
 class RpcClient implements ClientInterface
 {
-    /**
-     * 控制当客户端遇到错误时的行为。
-     * E_EXCEPTION 当遇到错误时抛出异常
-     * E_RETURN 当遇到错误时立刻返回false
-     */
-    const E_EXCEPTION = 1;
-    const E_RETURN    = 2;
 
     /**
      * 异常错误码
@@ -27,72 +24,67 @@ class RpcClient implements ClientInterface
     const ERR_SEND    = 9993;//发送失败
     const ERR_PORT    = 9994;//未配置的接口
 
-
-    protected $time_out;
-
-    protected $setting;
-
+    /**
+     * @var \swoole_client $client
+     */
+    protected $client;
     protected $parser;
-
     protected $code;
-
     protected $message;
+    protected $time_out;
+    protected $eof;
 
-    protected $flag;
 
-    protected $default_conn;
-
-    protected $now_port;
-
-    public function __construct()
+    public function __construct( ParserInterface $parser, ClientParams $params )
     {
-        $this->code         = null;
-        $this->message      = null;
-        $this->default_conn = 'default';
+        $this->code    = null;
+        $this->message = null;
+        $this->parser  = $parser;
+        $this->client  = $this->bootstrap($params);
+        $this->connect($params);
+    }
+
+
+    protected function bootstrap( ClientParams $params )
+    {
+        $client    = new \swoole_client($params->sock_type, $params->is_sync, $params->key);
+        $this->eof = $params->setting['package_eof'];
+        $client->set($params->setting);
+
+        return $client;
     }
 
     /**
      * @inheritdoc
      */
-    public function call( $method, $params, $flag )
+    public function call( $method, $params, $flag = null )
     {
-        /**
-         * 设置参数
-         */
-        $this->flag = $flag;
-
-        /**
-         * 在调用前贤判断是否指定了链接名称，如果没有指定
-         * 将会调用default_port的值作为链接名称
-         */
-        if ( !$this->isConnected() ) {
-            $this->connect($this->default_conn);
-        }
-
         //判断与服务端链接是否成功
         if ( !$this->isConnected() ) {
-            //客户端链接资源服务器失败
-            $this->error(self::ERR_CONNECT);
+            throw new AppException('client connect error', static::ERR_CONNECT);
         }
 
         //通信逻辑为客户端请求->服务端应答
         //在客户端请求之前需要确认已经向服务端成功发送数据
-        if ( !$this->client->send($this->getParser()->encode($method, $params) . $this->getEof()) ) {
+        if ( !$this->client->send($this->getParser()->encode(compact('method', 'params', 'flag')) . $this->getEof()) ) {
             //发送数据失败
-            $this->error(self::ERR_SEND);
+            throw new AppException('client send data error:', static::ERR_SEND);
         }
+
         $msg  = '';
         $time = microtime(true);
         //当数据发送成功等待数据返回
         while ( 1 ) {
             if ( microtime(true) - $time > $this->time_out ) {
-                $this->error(self::ERR_TIMEOUT);
+                throw new AppException('client timeout', static::ERR_TIMEOUT);
             }
-            $msg .= $this->client->recv();
-            if ( $msg === false ) {
+            $m = $this->client->recv();
+            if ( $m === false ) {
                 //等待数据超时
-                $this->error(self::ERR_TIMEOUT);
+                throw new AppException('client timeout', static::ERR_TIMEOUT);
             }
+            $msg .= $m;
+
             $start = strlen($this->getEof());
             if ( $this->getEof() == substr($msg, -$start, $start) ) {
                 break;
@@ -102,8 +94,8 @@ class RpcClient implements ClientInterface
 
         $response = $this->parser->decode($msg);
         //设置返回码和信息
-        $this->setCode($response['code']);
-        $this->setMessage($response['msg']);
+        $this->code    = $response['code'];
+        $this->message = $response['msg'];
 
         return $response['data'];
     }
@@ -111,8 +103,14 @@ class RpcClient implements ClientInterface
     /**
      * @inheritdoc
      */
-    public function connect( $conn )
+    public function connect( ClientParams $params )
     {
+        if ( $this->isConnected() ) {
+            $this->close();
+        }
+        $this->time_out = 1000 * $params->timeout;
+
+        return $this->client->connect($params->address, $params->port, $params->timeout, $params->flag);
     }
 
     /**
@@ -120,6 +118,7 @@ class RpcClient implements ClientInterface
      */
     public function getCode()
     {
+        return $this->code;
     }
 
     /**
@@ -127,5 +126,75 @@ class RpcClient implements ClientInterface
      */
     public function getMessage()
     {
+        return $this->message;
     }
+
+    public function isConnected()
+    {
+        return $this->client->isConnected();
+    }
+
+    public function close()
+    {
+        return $this->client->close();
+    }
+
+
+    /**
+     * @return \swoole_client
+     */
+    public function getClient()
+    {
+        return $this->client;
+    }
+
+    /**
+     * User: liqi
+     * Date: 2016.8.13
+     *
+     * @param \swoole_client $client
+     */
+    public function setClient( $client )
+    {
+        $this->client = $client;
+    }
+
+    /**
+     * @return \Phalsion\RpcFramework\Component\RpcServer\Parser\ParserInterface
+     */
+    public function getParser()
+    {
+        return $this->parser;
+    }
+
+    /**
+     * User: liqi
+     * Date: 2016.8.13
+     *
+     * @param \Phalsion\RpcFramework\Component\RpcServer\Parser\ParserInterface $parser
+     */
+    public function setParser( $parser )
+    {
+        $this->parser = $parser;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEof()
+    {
+        return $this->eof;
+    }
+
+    /**
+     * User: liqi
+     * Date: 2016.8.13
+     *
+     * @param mixed $eof
+     */
+    public function setEof( $eof )
+    {
+        $this->eof = $eof;
+    }
+
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Phalsion\RpcFramework\Component\BaseClass;
+namespace Phalsion\RpcFramework\Bundle\FrameworkBundle;
 
 /**
  * Class AbstractComponent

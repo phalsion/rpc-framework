@@ -10,7 +10,7 @@ namespace Phalsion\RpcFramework\Component\DependencyInjectionRegister;
  */
 class DataBaseRegister extends DiRegister
 {
-    public function register( $reload = false )
+    public function register( \Phalcon\DiInterface $di )
     {
         $database_configs = $this->getParameter('database');
 

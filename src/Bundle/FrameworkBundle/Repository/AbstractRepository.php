@@ -1,12 +1,12 @@
 <?php
 
-namespace Phalsion\RpcFramework\Component\BaseClass;
+namespace Phalsion\RpcFramework\Bundle\FrameworkBundle\Repository;
 
 
 use Phalcon\Mvc\Model as Entity;
+use Phalsion\RpcFramework\Bundle\FrameworkBundle\AbstractBaseClass;
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\ErrorCode;
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\Exception\AppException;
-use Phalsion\RpcFramework\Bundle\FrameworkBundle\Repository\RepositoryInterface;
 
 /**
  * Class AbstractRepository
@@ -14,7 +14,7 @@ use Phalsion\RpcFramework\Bundle\FrameworkBundle\Repository\RepositoryInterface;
  * @author  liqi created_at 2017/10/18下午6:33
  * @package \Phalsion\RpcFramework\Component\BaseClass
  */
-abstract class AbstractRepository extends AbstractBaseClass implements RepositoryInterface
+abstract class AbstractRepository extends AbstractBaseClass
 {
     private $_entity;
 
@@ -27,23 +27,4 @@ abstract class AbstractRepository extends AbstractBaseClass implements Repositor
     {
         $this->_entity = $entity;
     }
-
-    public function newEntity()
-    {
-        return $this->Di($this->getEntityName());
-    }
-
-    public function persistEntity( Entity $entity )
-    {
-        if ( false == $entity->save() ) {
-            throw new AppException(
-                '保存失败！',
-                ErrorCode::FAIL
-            );
-        }
-
-        return true;
-    }
-
-
 }

@@ -4,16 +4,18 @@ namespace Phalsion\RpcFramework\Component\RpcKernel;
 
 
 use Phalcon\Config\Adapter\Ini;
+use Phalcon\Di;
 use Phalcon\Di\Injectable;
 use Phalcon\Di\ServiceProviderInterface;
-use Phalsion\RpcFramework\Bundle\DebugBundle\DebugBundle;
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\ErrorCode;
-use Phalsion\RpcFramework\Bundle\FrameworkBundle\FrameWorkBundle;
 use Phalsion\RpcFramework\Component\Config\ConfigLoaderInterface;
+use Phalsion\RpcFramework\Component\Exception\RuntimeException;
 use Phalsion\RpcFramework\Component\Router\RouterInterface;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\RequestBuilder;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\RequestInterface;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\Response;
+use Phalsion\RpcFramework\Component\RpcKernel\Register\BootRegisterInterface;
+use Phalsion\RpcFramework\Component\RpcKernel\Register\ReloadRegisterInterface;
 
 /**
  * Class Kernel
@@ -24,7 +26,7 @@ use Phalsion\RpcFramework\Component\RpcKernel\Foundation\Response;
 abstract class Kernel extends Injectable implements KernelInterface
 {
 
-    const VERSION       = '2.0.0';
+    const VERSION       = '0.1.0';
     const EXTRA_VERSION = 'beta';
 
     protected $is_debug;
@@ -32,6 +34,8 @@ abstract class Kernel extends Injectable implements KernelInterface
     protected $startTime;
     protected $booted;
     protected $router;
+    protected $app;
+    protected $reloadBundles;
 
 
     /**
@@ -41,6 +45,12 @@ abstract class Kernel extends Injectable implements KernelInterface
      */
     protected $bundles;
 
+
+    /**
+     * @var \Phalcon\Events\Manager $kernel_events_manager
+     */
+    protected $kernel_events_manager;
+
     /**
      * User: liqi
      * Kernel constructor.
@@ -48,20 +58,23 @@ abstract class Kernel extends Injectable implements KernelInterface
      * @param string  $environment
      * @param boolean $debug
      */
-    public function __construct( $environment, $debug, ConfigLoaderInterface $config_loader, RouterInterface $router )
+    public function __construct( $environment, $debug, ConfigLoaderInterface $config_loader, RouterInterface $router, Di $app )
     {
+        $this->app = $app;
+        $this->setDI($app);
         $this->environment = $environment;
         $this->is_debug    = (bool) $debug;
         $this->booted      = false;
         $this->loadConfig($config_loader);
-        $this->router->setRouterMap([]);
         $this->router = $router;
     }
 
 
     public function reload()
     {
-
+        foreach ( $this->reloadBundles as $bundle ) {
+            $this->kernel_events_manager->fire(KernelEvents::RELOAD, $bundle, $this->app);
+        }
     }
 
     public function boot()
@@ -71,10 +84,17 @@ abstract class Kernel extends Injectable implements KernelInterface
             return;
         }
         $this->booted = true;
+        if ( !$this->app->has('console') ) {
+            $this->app->set('console', $this->app);
+        }
+
+        if ( !$this->app->has('kernelEventsManager') ) {
+            throw new RuntimeException("'kernelEventsManager' not found. please add FrameWorkBundle", -1);
+        }
+        $this->kernel_events_manager = $this->app->get('kernelEventsManager');
 
         //注册bundle
         $this->initializeBundles();
-
     }
 
     public function loadConfig( ConfigLoaderInterface $config_loader )
@@ -84,11 +104,11 @@ abstract class Kernel extends Injectable implements KernelInterface
 
         //加载框架配置项
         $path = "config_" . $this->getEnvironment() . '.yml';
-        if ( !file_exists($this->getRootDir() . '/config/' . $path) ) {
-            $path = "config_" . $this->getEnvironment() . '.php';
-        }
-        $config_loader->setRootPath($this->getRootDir() . '/config/');
-        $config_loader->load($path);
+        $file = $this->getRootDir() . '/config/' . $path;
+//        if ( !file_exists($file) ) {
+//            $file = "config_" . $this->getEnvironment() . '.php';
+//        }
+        $config_loader->load($file);
     }
 
 
@@ -99,7 +119,7 @@ abstract class Kernel extends Injectable implements KernelInterface
      * @param string           $action
      * @param RequestInterface $request
      *
-     * @return mixed
+     * @return
      */
     public function handle( $data )
     {
@@ -110,11 +130,15 @@ abstract class Kernel extends Injectable implements KernelInterface
             $request = RequestBuilder::createFromData($data);
             $this->getDI()->set('request', $request);
             //处理请求获取返回信息
-            $response = $this->getDI()->get('console')->handle($request->match())->getResponse();
+            $response = $this->getDI()
+                ->get('console')
+                ->handle($request->match())
+                ->getResponse();
             $this->getDI()->remove('request');
         } catch ( \Exception $exception ) {
             $response = Response::createResponse(ErrorCode::FAIL, $exception->getMessage(), null, 0);
         }
+
         return $response;
     }
 
@@ -138,6 +162,13 @@ abstract class Kernel extends Injectable implements KernelInterface
             if ( $bundle instanceof ServiceProviderInterface ) {
                 $bundle->register($this->getDI());
                 $this->bundles[ $name ] = $bundle;
+                if ( $bundle instanceof BootRegisterInterface ) {
+                    $this->kernel_events_manager->fire(KernelEvents::BOOTSTRAP, $bundle, $this->app);
+                }
+
+                if ( $bundle instanceof ReloadRegisterInterface ) {
+                    $this->reloadBundles[] = $bundle;
+                }
             }
 
             throw new \RuntimeException(sprintf('名称为"%s"的bundle 必须实现 Phalcon\Di\ServiceProviderInterface接口才能被注册', $name));

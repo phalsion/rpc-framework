@@ -15,8 +15,8 @@ class RequestBuilder
 {
     public static function createFromData( $data )
     {
-        $router_name = $data['router']['method'];
-        $router      = $data['router']['match'];
+        $router_name = $data['method'];
+        $router      = $data['router'];
 
         if ( !array_key_exists('params', $data) || !is_array($data['params']) ) {
             throw new RuntimeException('数据中缺少params参数!');

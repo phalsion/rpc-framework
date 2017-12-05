@@ -5,7 +5,6 @@ namespace Phalsion\RpcFramework\Component\Config;
 
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\ErrorCode;
 use Phalsion\RpcFramework\Component\Exception\RuntimeException;
-use Phalsion\RpcFramework\Component\RpcKernel\KernelInterface;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -40,6 +39,10 @@ class YmlResolver implements ConfigFileResolver
 
         $content                 = Yaml::parse(file_get_contents($path));
         $this->resolved[ $path ] = $content;
+
+        if ( !$content ) {
+            return $content;
+        }
 
         if ( array_key_exists('imports', $content) ) {
             $imports = $content['imports'];

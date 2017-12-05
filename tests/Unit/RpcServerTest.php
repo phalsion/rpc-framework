@@ -4,6 +4,8 @@ namespace Tests\Unit;
 
 
 use Phalsion\RpcFramework\Component\RpcKernel\Handable;
+use Phalsion\RpcFramework\Component\RpcServer\Client\ClientParams;
+use Phalsion\RpcFramework\Component\RpcServer\Client\RpcClient;
 use Phalsion\RpcFramework\Component\RpcServer\Parser\ParserInterface;
 use Phalsion\RpcFramework\Component\RpcServer\RpcServer;
 use Phalsion\RpcFramework\Component\RpcServer\ServerParams;
@@ -36,13 +38,18 @@ class RpcServerTest extends \PHPUnit\Framework\TestCase
      */
     public function testClient()
     {
-        $client = new swoole_client(SWOOLE_SOCK_TCP);
-        if ( !$client->connect('127.0.0.1', 9599, -1) ) {
-            exit("connect failed. Error: {$client->errCode}\n");
-        }
-        $client->send("hello world\r\n");
-        $this->assertEquals("hello world\r\n", $client->recv());
-        $client->close();
+        $client = new RpcClient($this->getTestParser(), ClientParams::assign(SWOOLE_SOCK_TCP, SWOOLE_SOCK_SYNC, null,
+                                                                             [
+                                                                                 'open_eof_check'     => true,
+                                                                                 'package_eof'        => "\r\n",
+                                                                                 'package_max_length' => 1024 * 1024 * 2,
+                                                                             ],
+                                                                             '127.0.0.1',
+                                                                             '9599',
+                                                                             0.5, 0));
+
+        $d = $client->call('asd', [ 'a' => 1 ]);
+        $this->assertEquals("hello world\r\n", $d);
     }
 
     public function getTestHandler()
@@ -65,12 +72,20 @@ class RpcServerTest extends \PHPUnit\Framework\TestCase
 
             public function encode( $data )
             {
+                if ( is_array($data) ) {
+                    return json_encode($data);
+                }
+
                 return $data;
             }
 
             public function decode( $data )
             {
-                return $data;
+                if ( json_decode($data) ) {
+                    return json_decode($data);
+                } else {
+                    return [ 'code' => 0, 'data' => $data, 'msg' => '' ];
+                }
             }
         };
     }

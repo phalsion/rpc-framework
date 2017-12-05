@@ -10,6 +10,8 @@ namespace Phalsion\RpcFramework\Component\RpcKernel;
  */
 class KernelEvents
 {
-    
-    const REQUEST = 'kernel:request';
+    const EVENT_TYPE = 'kernel';
+    const BOOTSTRAP  = 'kernel:bootstrap';
+    const RELOAD     = 'kernel:reload';
+    const REQUEST    = 'kernel:request';
 }

@@ -15,6 +15,11 @@ abstract class AbstractBundle implements BundleInterface
 {
     private $_di;
 
+    /**
+     * @var \Phalsion\RpcFramework\Component\RpcKernel\KernelInterface $_kernel
+     */
+    private $_kernel;
+
     public function getName()
     {
         return static::class;
@@ -22,10 +27,14 @@ abstract class AbstractBundle implements BundleInterface
 
     public function register( \Phalcon\DiInterface $di )
     {
-        $this->_di = $di;
+        $this->_di     = $di;
+        $this->_kernel = $di->get('kernel');
         $this->boot();
     }
 
+    /**
+     * @return \Phalcon\DiInterface
+     */
     public function getDI()
     {
         return $this->_di;
