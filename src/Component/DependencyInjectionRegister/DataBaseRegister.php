@@ -15,7 +15,7 @@ class DataBaseRegister extends DiRegister
         $database_configs = $di->get('config')->get('database');
 
         foreach ( $database_configs as $name => $options ) {
-            $this->getDI()->setShared($name, function () use ( $options ) {
+            $di->setShared($name, function () use ( $options ) {
                 $class  = 'Phalcon\Db\Adapter\Pdo\\' . $options->adapter;
                 $params = [
                     'host'     => $options->host,

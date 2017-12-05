@@ -4,8 +4,10 @@ namespace Phalsion\Example\App;
 
 
 use Phalsion\Example\ExampleBundle;
+use Phalsion\RpcFramework\Bundle\DataBaseBundle\DataBaseBundle;
 use Phalsion\RpcFramework\Bundle\DebugBundle\DebugBundle;
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\FrameWorkBundle;
+use Phalsion\RpcFramework\Bundle\RedisBundle\RedisBundle;
 use Phalsion\RpcFramework\Component\RpcKernel\Kernel;
 
 /**
@@ -21,7 +23,9 @@ class AppKernel extends Kernel
     {
         $bundles = [
             new FrameWorkBundle(),
-            new ExampleBundle()
+            new ExampleBundle(),
+            new RedisBundle(),
+            new DataBaseBundle()
         ];
 
         if ( $this->isDebug() ) {

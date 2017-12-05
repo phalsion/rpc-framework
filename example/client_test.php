@@ -32,4 +32,4 @@ $client = new RpcClient(
 
 $d = $client->call('test', [ 'a' => 1 ]);
 
-var_dump($d);
+var_dump($d, $client->getMessage());
