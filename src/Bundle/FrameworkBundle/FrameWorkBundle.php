@@ -30,20 +30,13 @@ class FrameWorkBundle extends AbstractBundle implements ReloadRegisterInterface,
 
     public function getBootRegister()
     {
-
-        $router_register          = new RouterRegister();
-        $router_register->routers = [];
-
         return [
-            $router_register
         ];
     }
 
     public function getReloadRegister()
     {
         return [
-            new DataBaseRegister(),
-            new RedisRegister()
         ];
     }
 }

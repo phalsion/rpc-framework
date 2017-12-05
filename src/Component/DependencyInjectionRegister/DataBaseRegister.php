@@ -12,7 +12,7 @@ class DataBaseRegister extends DiRegister
 {
     public function register( \Phalcon\DiInterface $di )
     {
-        $database_configs = $this->getParameter('database');
+        $database_configs = $di->get('config')->get('database');
 
         foreach ( $database_configs as $name => $options ) {
             $this->getDI()->setShared($name, function () use ( $options ) {

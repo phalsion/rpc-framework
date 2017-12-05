@@ -10,5 +10,7 @@ namespace Phalsion\RpcFramework\Component\Router;
  */
 interface RouterRegisterInterface
 {
-    public function register( RouterAttacherInterface $router );
+    public function register( HasRouteInterface $router );
+
+    public function getRouter(): RouterInterface;
 }

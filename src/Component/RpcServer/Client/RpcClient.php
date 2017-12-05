@@ -66,7 +66,7 @@ class RpcClient implements ClientInterface
 
         //通信逻辑为客户端请求->服务端应答
         //在客户端请求之前需要确认已经向服务端成功发送数据
-        if ( !$this->client->send($this->getParser()->encode(compact('method', 'params', 'flag')) . $this->getEof()) ) {
+        if ( !$this->client->send($this->getParser()->encode(compact('method', 'params', 'flag'))) ) {
             //发送数据失败
             throw new AppException('client send data error:', static::ERR_SEND);
         }
@@ -94,10 +94,9 @@ class RpcClient implements ClientInterface
 
         $response = $this->parser->decode($msg);
         //设置返回码和信息
-        $this->code    = $response['code'];
-        $this->message = $response['msg'];
-
-        return $response['data'];
+        $this->code    = $response[0];
+        $this->message = $response[2];
+        return $response[1];
     }
 
     /**

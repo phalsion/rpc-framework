@@ -3,14 +3,13 @@
 namespace Phalsion\RpcFramework\Component\RpcKernel;
 
 
-use Phalcon\Config\Adapter\Ini;
 use Phalcon\Di;
 use Phalcon\Di\Injectable;
 use Phalcon\Di\ServiceProviderInterface;
 use Phalsion\RpcFramework\Bundle\FrameworkBundle\ErrorCode;
-use Phalsion\RpcFramework\Component\Config\ConfigLoaderInterface;
 use Phalsion\RpcFramework\Component\Exception\RuntimeException;
-use Phalsion\RpcFramework\Component\Router\RouterInterface;
+use Phalsion\RpcFramework\Component\Router\HasRouteInterface;
+use Phalsion\RpcFramework\Component\Router\RouterRegister;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\RequestBuilder;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\RequestInterface;
 use Phalsion\RpcFramework\Component\RpcKernel\Foundation\Response;
@@ -33,10 +32,13 @@ abstract class Kernel extends Injectable implements KernelInterface
     protected $environment;
     protected $startTime;
     protected $booted;
-    protected $router;
-    protected $app;
+    protected $router_register;
     protected $reloadBundles;
 
+    /**
+     * @var \Phalsion\RpcFramework\Component\Router\RouterInterface $router
+     */
+    protected $router;
 
     /**
      * 储存已经被注册过的bundle
@@ -58,22 +60,21 @@ abstract class Kernel extends Injectable implements KernelInterface
      * @param string  $environment
      * @param boolean $debug
      */
-    public function __construct( $environment, $debug, ConfigLoaderInterface $config_loader, RouterInterface $router, Di $app )
+    public function __construct( $environment, $debug, RouterRegister $router_register, Di $di )
     {
-        $this->app = $app;
-        $this->setDI($app);
-        $this->environment = $environment;
-        $this->is_debug    = (bool) $debug;
-        $this->booted      = false;
-        $this->loadConfig($config_loader);
-        $this->router = $router;
+        $this->setDI($di);
+        $this->environment     = $environment;
+        $this->is_debug        = (bool) $debug;
+        $this->booted          = false;
+        $this->reloadBundles   = [];
+        $this->router_register = $router_register;
     }
 
 
     public function reload()
     {
         foreach ( $this->reloadBundles as $bundle ) {
-            $this->kernel_events_manager->fire(KernelEvents::RELOAD, $bundle, $this->app);
+            $this->kernel_events_manager->fire(KernelEvents::RELOAD, $bundle, $this->getDI());
         }
     }
 
@@ -84,33 +85,20 @@ abstract class Kernel extends Injectable implements KernelInterface
             return;
         }
         $this->booted = true;
-        if ( !$this->app->has('console') ) {
-            $this->app->set('console', $this->app);
+        if ( !$this->getDI()->has('console') ) {
+            throw new RuntimeException("service 'console' not found.", -1);
         }
 
-        if ( !$this->app->has('kernelEventsManager') ) {
-            throw new RuntimeException("'kernelEventsManager' not found. please add FrameWorkBundle", -1);
+        if ( !$this->getDI()->has('kernelEventsManager') ) {
+            throw new RuntimeException("service 'kernelEventsManager' not found.", -1);
         }
-        $this->kernel_events_manager = $this->app->get('kernelEventsManager');
+        $this->kernel_events_manager = $this->getDI()->get('kernelEventsManager');
 
         //注册bundle
         $this->initializeBundles();
+
+        $this->router = $this->router_register->getRouter();
     }
-
-    public function loadConfig( ConfigLoaderInterface $config_loader )
-    {
-        //先加载env.ini
-        $this->getDI()->setShared('env', new Ini($this->getRootDir() . '/env.ini'));
-
-        //加载框架配置项
-        $path = "config_" . $this->getEnvironment() . '.yml';
-        $file = $this->getRootDir() . '/config/' . $path;
-//        if ( !file_exists($file) ) {
-//            $file = "config_" . $this->getEnvironment() . '.php';
-//        }
-        $config_loader->load($file);
-    }
-
 
     /**
      * 处理请求
@@ -158,20 +146,25 @@ abstract class Kernel extends Injectable implements KernelInterface
             if ( isset($this->bundles[ $name ]) ) {
                 throw new \LogicException(sprintf('名称为"%s"的bundle被注册了2次，请检查registerBundles中注册bundle是否重复！', $name));
             }
-
             if ( $bundle instanceof ServiceProviderInterface ) {
                 $bundle->register($this->getDI());
                 $this->bundles[ $name ] = $bundle;
                 if ( $bundle instanceof BootRegisterInterface ) {
-                    $this->kernel_events_manager->fire(KernelEvents::BOOTSTRAP, $bundle, $this->app);
+                    $this->kernel_events_manager->fire(KernelEvents::BOOTSTRAP, $bundle, $this->getDI());
                 }
 
                 if ( $bundle instanceof ReloadRegisterInterface ) {
                     $this->reloadBundles[] = $bundle;
                 }
+
+                if ( $bundle instanceof HasRouteInterface ) {
+                    $this->router_register->register($bundle);
+                }
+
+                continue;
             }
 
-            throw new \RuntimeException(sprintf('名称为"%s"的bundle 必须实现 Phalcon\Di\ServiceProviderInterface接口才能被注册', $name));
+            throw new \RuntimeException(sprintf('the bundle "%s" is not instanceof Phalcon\Di\ServiceProviderInterface, so it can not be register', $name));
         }
     }
 

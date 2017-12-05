@@ -11,7 +11,7 @@ use Phalsion\RpcFramework\Component\Exception\RuntimeException;
  * @author  liqi created_at 2017/10/20下午3:29
  * @package \Phalsion\RpcFramework\Component\Router
  */
-abstract class AbstractRouter implements RouterInterface, RouterAttacherInterface
+abstract class AbstractRouter implements RouterInterface
 {
     protected $routerMap;
 

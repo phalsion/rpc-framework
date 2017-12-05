@@ -16,6 +16,6 @@ class DebugBundle extends AbstractBundle
 
     public function boot()
     {
-        require "./foundation.php";
+        require __DIR__ . "/foundation.php";
     }
 }

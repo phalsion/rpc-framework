@@ -15,14 +15,19 @@ use Phalsion\RpcFramework\Component\Exception\RuntimeException;
 class ConfigLoader implements ConfigLoaderInterface
 {
 
-    protected $root;
+
+    public function __construct( $path )
+    {
+        $this->load($path);
+    }
 
     public function load( $path )
     {
-        $yml_resolve = new YmlResolver();
         if ( !file_exists($path) ) {
             throw new RuntimeException(sprintf('配置文件%s没有被找到,请检查配置文件路径!', $path));
         }
+        $yml_resolve = new YmlResolver();
+        $yml_resolve->setRootPath(dirname($path) . '/');
 
         $file_extension = pathinfo($path, PATHINFO_EXTENSION);
 

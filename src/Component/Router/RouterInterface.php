@@ -13,4 +13,7 @@ Interface RouterInterface
     public function match( $request );
 
     public function setRouterMap( $map );
+
+    public function attach( $method, $payload );
+
 }

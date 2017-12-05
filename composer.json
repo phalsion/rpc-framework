@@ -1,29 +1,30 @@
 {
-    "name": "phalsion/rpc-framwork",
-    "authors": [
-        {
-            "name": "saberuster",
-            "email": "saberuster@gmail.com"
-        }
-    ],
-    "require": {
-        "symfony/yaml": "^3.3",
-        "predis/predis": "^1.1"
-    },
-    "autoload": {
-        "psr-4": {
-            "Phalsion\\RpcFramework\\": "src"
-        },
-        "files": [
-        ]
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^6.4",
-        "eaglewu/swoole-ide-helper": "dev-master"
+  "name": "phalsion/rpc-framwork",
+  "authors": [
+    {
+      "name": "saberuster",
+      "email": "saberuster@gmail.com"
     }
+  ],
+  "require": {
+    "symfony/yaml": "^3.3",
+    "predis/predis": "^1.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Phalsion\\RpcFramework\\": "src",
+      "Phalsion\\Example\\": "example"
+    },
+    "files": [
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^6.4",
+    "eaglewu/swoole-ide-helper": "dev-master"
+  }
 }

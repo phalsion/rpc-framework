@@ -11,15 +11,25 @@ namespace Phalsion\RpcFramework\Component\Router;
 class RouterRegister implements RouterRegisterInterface
 {
 
-    /**
-     * @var array $routers
-     */
-    public $routers;
+    protected $router;
 
-    public function register( RouterAttacherInterface $router )
+    /**
+     * User: liqi
+     * RouterRegister constructor.
+     *
+     * @param $router
+     */
+    public function __construct( RouterInterface $router ) { $this->router = $router; }
+
+    public function register( HasRouteInterface $has_route )
     {
-        foreach ( $this->routers as $m => $r ) {
-            $router->attach($m, $r);
+        foreach ( $has_route->getRouteMap() as $method => $payload ) {
+            $this->router->attach($method, $payload);
         }
+    }
+
+    public function getRouter(): RouterInterface
+    {
+        return $this->router;
     }
 }

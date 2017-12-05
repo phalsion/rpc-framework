@@ -15,7 +15,7 @@ class JsonParser implements ParserInterface
 {
     public function encode( $data )
     {
-        return json_encode($data);
+        return json_encode($data) ."\r\n";
     }
 
     public function decode( $data )
